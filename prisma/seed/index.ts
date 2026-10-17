@@ -24,43 +24,54 @@ if (process.env.NODE_ENV === "production" && process.env.SEED_ALLOW_PRODUCTION !
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 const storageRoot = path.resolve(process.cwd(), process.env.LOCAL_STORAGE_DIR ?? "./storage");
+/** روی Vercel فایل‌سیستم فقط‌خواندنی است؛ با STORAGE_DRIVER=blob تصاویر seed در Vercel Blob بارگذاری می‌شوند */
+const useBlob = process.env.STORAGE_DRIVER === "blob";
+
+/** ذخیرهٔ تصویر seed (WebP) و برگرداندن نشانی عمومی آن */
+async function putMedia(key: string, data: Buffer): Promise<string> {
+  if (useBlob) {
+    const { put } = await import("@vercel/blob");
+    const blob = await put(key, data, { access: "public", contentType: "image/webp", addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 31536000 });
+    return blob.url;
+  }
+  const file = path.join(storageRoot, key);
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, data);
+  return `/media/${key}`;
+}
 
 function seedNumber(text: string): number {
   return createHash("sha256").update(text).digest().readUInt32BE(0);
 }
 
-/** رندر SVG به WebP و ذخیره در پوشهٔ رسانه؛ اگر فایل وجود داشته باشد دوباره ساخته نمی‌شود */
+/** رندر SVG به WebP و ذخیره؛ در ذخیره‌سازی محلی اگر فایل وجود داشته باشد دوباره ساخته نمی‌شود */
 async function renderImage(key: string, svg: string, width: number, height: number) {
-  const file = path.join(storageRoot, key);
-  try {
-    await fs.access(file);
-  } catch {
-    await fs.mkdir(path.dirname(file), { recursive: true });
-    await sharp(Buffer.from(svg)).resize(width, height).webp({ quality: 82 }).toFile(file);
+  if (!useBlob) {
+    try {
+      await fs.access(path.join(storageRoot, key));
+      return { url: `/media/${key}`, width, height };
+    } catch {
+      // فایل هنوز ساخته نشده است
+    }
   }
-  return { url: `/media/${key}`, width, height };
+  const data = await sharp(Buffer.from(svg)).resize(width, height).webp({ quality: 82 }).toBuffer();
+  return { url: await putMedia(key, data), width, height };
 }
 
-/** کپی عکس برند از prisma/seed/photos به پوشهٔ رسانه */
+/** کپی عکس برند از prisma/seed/photos به ذخیره‌سازی رسانه */
 async function copyPhoto(file: string) {
-  const key = `seed/photos/${file}`;
-  const target = path.join(storageRoot, key);
-  await fs.mkdir(path.dirname(target), { recursive: true });
-  await fs.copyFile(path.resolve(process.cwd(), "prisma/seed/photos", file), target);
-  return { url: `/media/${key}` };
+  const data = await fs.readFile(path.resolve(process.cwd(), "prisma/seed/photos", file));
+  return { url: await putMedia(`seed/photos/${file}`, data) };
 }
 
 /** نمای نزدیک بالاتنه از عکس روبه‌رو (برش ۳:۴ و بزرگ‌نمایی) */
 async function detailCrop(file: string) {
-  const key = `seed/photos/detail-${file}`;
-  const target = path.join(storageRoot, key);
-  await fs.mkdir(path.dirname(target), { recursive: true });
-  await sharp(path.resolve(process.cwd(), "prisma/seed/photos", file))
+  const data = await sharp(path.resolve(process.cwd(), "prisma/seed/photos", file))
     .extract({ left: 270, top: 170, width: 660, height: 880 })
     .resize(1200, 1600)
     .webp({ quality: 86 })
-    .toFile(target);
-  return { url: `/media/${key}` };
+    .toBuffer();
+  return { url: await putMedia(`seed/photos/detail-${file}`, data) };
 }
 
 function stockFor(sku: string): number {
@@ -331,12 +342,14 @@ async function seedContent() {
   // تصویر داستان برند: عکس واقعی لباس گلبرگ زرشکی
   const story = await copyPhoto("golbarg-burgundy-front.webp");
   const storyAlt = "لباس شب گلبرگ زرشکی با گلبرگ‌های پارچه‌ای روی بالاتنه";
-  await renderImage(
+  const og = await renderImage(
     "seed/brand/og-default.webp",
     silkSvg({ width: 1200, height: 630, background: ["#1C0911", "#3B0D1E"], ribbon: ["#641E32", "#A51D3A", "#D6B56D"], seed: 41, arch: true }),
     1200,
     630,
   );
+  // در حالت Blob نشانی تصویر اشتراک‌گذاری پیش‌فرض با نشانی واقعی فایل جایگزین می‌شود (اگر مدیر تغییرش نداده باشد)
+  await db.storeSettings.updateMany({ where: { id: 1, ogImageUrl: "/media/seed/brand/og-default.webp" }, data: { ogImageUrl: og.url } });
 
   if ((await db.banner.count()) === 0) {
     await db.banner.createMany({

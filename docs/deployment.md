@@ -74,6 +74,40 @@ docker compose --env-file .env.docker run --rm -it migrate npm run admin:create 
 > Docker روی ماشین توسعهٔ این پروژه نصب نبود؛ `Dockerfile` و `docker-compose.yml` نوشته شده‌اند اما هنوز ساخته و اجرا نشده‌اند.
 > پیش از استفاده یک‌بار `docker compose build` را اجرا و بررسی کنید.
 
+## روش ۳: Vercel (با Neon و Vercel Blob)
+
+فایل‌سیستم Vercel فقط‌خواندنی است؛ پس پایگاه داده روی Neon و تصاویر روی Vercel Blob نگه داشته می‌شوند.
+
+1. در Vercel پروژه را از مخزن گیت‌هاب بسازید (Framework: Next.js؛ تنظیمات build پیش‌فرض).
+2. در بخش **Storage** پروژه یک پایگاه دادهٔ **Neon** و یک انبار **Blob** بسازید و به پروژه وصل کنید؛ `DATABASE_URL` و `BLOB_READ_WRITE_TOKEN` خودکار اضافه می‌شوند.
+3. متغیرهای زیر را در **Settings → Environment Variables** اضافه کنید:
+
+```dotenv
+APP_URL=https://نام-پروژه.vercel.app
+STORAGE_DRIVER=blob
+TOKEN_HASH_SECRET=رشتهٔ-تصادفی-حداقل-۳۲-کاراکتر
+CRON_SECRET=رشتهٔ-تصادفی
+DATABASE_POOL_MAX=3
+EMAIL_PROVIDER=log          # یا smtp با تنظیمات SMTP واقعی
+# فقط برای نسخهٔ نمایشی با درگاه آزمایشی:
+PAYMENT_TEST_MODE=true
+ALLOW_TEST_PAYMENTS_IN_PRODUCTION=true
+```
+
+4. مهاجرت و دادهٔ نمونه را یک‌بار از سیستم خودتان اجرا کنید (با نشانی مستقیم Neon، نه pooler):
+
+```bash
+vercel env pull .env.vercel.local
+# DATABASE_URL را برابر DATABASE_URL_UNPOOLED همان فایل قرار دهید، سپس:
+npx prisma migrate deploy
+STORAGE_DRIVER=blob npm run db:seed        # اختیاری: کاتالوگ نمونه؛ تصاویر در Blob بارگذاری می‌شوند
+npm run admin:create -- --email owner@example.com
+```
+
+5. `vercel.json` کارهای دوره‌ای را روزی یک‌بار (محدودیت پلن رایگان) با GET و هدر `Authorization: Bearer $CRON_SECRET` روی `/api/v1/internal/jobs` اجرا می‌کند.
+
+> با `EMAIL_PROVIDER=log` ایمیلی ارسال نمی‌شود و فقط در پوشهٔ موقت سرور ثبت می‌شود؛ برای ارسال واقعی SMTP تنظیم کنید.
+
 ## پروکسی معکوس (nginx)
 
 ```nginx

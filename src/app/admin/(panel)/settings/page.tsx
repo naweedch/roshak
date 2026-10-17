@@ -53,7 +53,7 @@ async function Settings() {
               </dd>
               <dt>ذخیره‌سازی تصاویر</dt>
               <dd>
-                <Badge>{e.STORAGE_DRIVER === "s3" ? "S3" : "دیسک محلی"}</Badge>
+                <Badge>{e.STORAGE_DRIVER === "s3" ? "S3" : e.STORAGE_DRIVER === "blob" ? "Vercel Blob" : "دیسک محلی"}</Badge>
               </dd>
               <dt>درگاه آزمایشی</dt>
               <dd>

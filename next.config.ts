@@ -29,6 +29,10 @@ const s3Origin = (() => {
   }
 })();
 
+/** فایل‌های Vercel Blob از زیردامنهٔ مخصوص هر انبار سرو می‌شوند */
+const blobEnabled = process.env.STORAGE_DRIVER === "blob";
+const BLOB_HOST = "*.public.blob.vercel-storage.com";
+
 const analyticsEnabled = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
 const instagramEnabled = Boolean(process.env.INSTAGRAM_ACCESS_TOKEN);
 
@@ -37,7 +41,7 @@ const csp = [
   // Next.js برای اسکریپت‌های درون‌خطی hydration به 'unsafe-inline' نیاز دارد (بدون nonce)
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${analyticsEnabled ? " https://www.googletagmanager.com" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${s3Origin ? ` ${s3Origin}` : ""}${analyticsEnabled ? " https://www.google-analytics.com" : ""}${instagramEnabled ? " https://*.cdninstagram.com https://*.fbcdn.net" : ""}`,
+  `img-src 'self' data: blob:${s3Origin ? ` ${s3Origin}` : ""}${blobEnabled ? ` https://${BLOB_HOST}` : ""}${analyticsEnabled ? " https://www.google-analytics.com" : ""}${instagramEnabled ? " https://*.cdninstagram.com https://*.fbcdn.net" : ""}`,
   "font-src 'self' data:",
   `connect-src 'self'${isDev ? " ws: wss:" : ""}${analyticsEnabled ? " https://www.google-analytics.com https://region1.google-analytics.com" : ""}${s3Origin ? ` ${s3Origin}` : ""}`,
   "media-src 'self' blob:",
@@ -75,7 +79,7 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 96, 128, 192, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30,
     localPatterns: [{ pathname: "/media/**", search: "" }, { pathname: "/images/**", search: "" }],
-    remotePatterns: s3Pattern(),
+    remotePatterns: [...s3Pattern(), ...(blobEnabled ? [{ protocol: "https" as const, hostname: BLOB_HOST, pathname: "/**" }] : [])],
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "@react-three/drei"],

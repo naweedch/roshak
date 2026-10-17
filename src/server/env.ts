@@ -33,7 +33,8 @@ const schema = z.object({
   SMTP_PASSWORD: optionalString,
   STORE_NOTIFICATION_EMAIL: optionalString,
 
-  STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  STORAGE_DRIVER: z.enum(["local", "s3", "blob"]).default("local"),
+  BLOB_READ_WRITE_TOKEN: optionalString,
   LOCAL_STORAGE_DIR: z.string().default("./storage"),
   S3_ENDPOINT: optionalString,
   S3_REGION: z.string().default("us-east-1"),

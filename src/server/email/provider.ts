@@ -5,6 +5,7 @@
  */
 import "server-only";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { env } from "../env";
 import { logger } from "../logger";
@@ -29,7 +30,8 @@ class LogEmailProvider implements EmailProvider {
 
   async send(message: OutgoingEmail) {
     // turbopackIgnore: ایمیل‌های ذخیره‌شدهٔ توسعه (حاوی لینک تأیید و بازیابی) نباید در خروجی ساخت کپی شوند
-    const dir = path.resolve(/*turbopackIgnore: true*/ process.cwd(), ".data/mail");
+    // روی Vercel فایل‌سیستم فقط‌خواندنی است و تنها پوشهٔ موقت قابل نوشتن است
+    const dir = process.env.VERCEL ? path.join(os.tmpdir(), "roshak-mail") : path.resolve(/*turbopackIgnore: true*/ process.cwd(), ".data/mail");
     await fs.mkdir(dir, { recursive: true });
     const safeTo = message.to.replace(/[^a-z0-9@._-]/gi, "_");
     const file = path.join(dir, `${new Date().toISOString().replace(/[:.]/g, "-")}-${safeTo}.html`);

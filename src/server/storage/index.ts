@@ -2,6 +2,7 @@
  * لایهٔ انتزاعی ذخیره‌سازی رسانه.
  * - local: فایل‌ها در LOCAL_STORAGE_DIR ذخیره و از مسیر ‎/media/…‎ با کش بلندمدت سرو می‌شوند.
  * - s3: هر سرویس سازگار با S3 (AWS، MinIO، ابر آروان، Liara Object Storage و ...).
+ * - blob: Vercel Blob (برای استقرار روی Vercel که فایل‌سیستم آن فقط‌خواندنی است؛ توکن BLOB_READ_WRITE_TOKEN).
  */
 import "server-only";
 import fs from "node:fs/promises";
@@ -14,7 +15,7 @@ export interface StoredObject {
 }
 
 export interface StorageDriver {
-  readonly name: "local" | "s3";
+  readonly name: "local" | "s3" | "blob";
   put(key: string, body: Buffer, contentType: string): Promise<StoredObject>;
   delete(key: string): Promise<void>;
 }
@@ -94,9 +95,27 @@ class S3StorageDriver implements StorageDriver {
   }
 }
 
+class BlobStorageDriver implements StorageDriver {
+  readonly name = "blob" as const;
+
+  async put(key: string, body: Buffer, contentType: string): Promise<StoredObject> {
+    assertSafeKey(key);
+    const { put } = await import("@vercel/blob");
+    const blob = await put(key, body, { access: "public", contentType, addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 31536000 });
+    return { key, url: blob.url };
+  }
+
+  async delete(key: string): Promise<void> {
+    assertSafeKey(key);
+    const { del } = await import("@vercel/blob");
+    await del(key);
+  }
+}
+
 let driver: StorageDriver | null = null;
 
 export function getStorage(): StorageDriver {
-  driver ??= process.env.STORAGE_DRIVER === "s3" ? new S3StorageDriver() : new LocalStorageDriver();
+  driver ??=
+    process.env.STORAGE_DRIVER === "s3" ? new S3StorageDriver() : process.env.STORAGE_DRIVER === "blob" ? new BlobStorageDriver() : new LocalStorageDriver();
   return driver;
 }
