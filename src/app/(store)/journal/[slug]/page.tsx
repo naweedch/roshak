@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -12,6 +13,8 @@ import { articleJsonLd, pageMetadata } from "@/server/seo";
 type Params = Promise<{ slug: string }>;
 
 async function load(params: Params) {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const { slug } = await params;
   const article = await getArticle(decodeURIComponent(slug));
   if (!article) notFound();
@@ -41,6 +44,8 @@ export default function ArticlePage({ params }: { params: Params }) {
 }
 
 async function ArticleContent({ params }: { params: Params }) {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const [article, settings] = await Promise.all([load(params), getSettings()]);
   return (
     <>

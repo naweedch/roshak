@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import Image from "next/image";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -11,6 +12,8 @@ import { CatalogResults, catalogMetadata, type SearchParams } from "../../shop/_
 type Params = Promise<{ slug: string }>;
 
 async function resolve(params: Params) {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const collection = await getCollection(slug);
@@ -40,6 +43,8 @@ export default function CollectionPage({ params, searchParams }: { params: Param
 }
 
 async function CollectionContent({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const collection = await resolve(params);
   const accent = accentClasses(collection.accentColor);
   return (

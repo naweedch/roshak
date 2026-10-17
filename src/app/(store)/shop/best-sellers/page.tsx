@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Breadcrumbs } from "@/components/store/breadcrumbs";
 import { CatalogSkeleton } from "@/components/store/catalog-view";
@@ -32,6 +33,8 @@ export default function BestSellersPage({ searchParams }: { searchParams: Search
 
 /** تا وقتی فروش کافی ثبت نشده، صادقانه اعلام می‌شود که ترتیب بر اساس فروش واقعی نیست */
 async function SalesNotice() {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const productsWithSales = await getSalesSignal();
   if (productsWithSales >= 4) return null;
   return (

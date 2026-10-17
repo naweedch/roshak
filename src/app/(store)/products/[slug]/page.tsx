@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -24,6 +25,8 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
  * نامک قدیمی با ریدایرکت دائمی به نامک جدید منتقل می‌شود.
  */
 async function resolveProduct(params: Params, searchParams: SearchParams): Promise<{ product: ProductDetailDTO; preview: boolean }> {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const sp = await searchParams;
@@ -63,6 +66,8 @@ export default function ProductPage({ params, searchParams }: { params: Params; 
 }
 
 async function ProductContent({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const { product, preview } = await resolveProduct(params, searchParams);
   const [settings, related] = await Promise.all([getSettings(), getRelated(product.id)]);
 

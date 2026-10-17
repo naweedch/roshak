@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/components/content/markdown";
@@ -9,6 +10,8 @@ import { pageMetadata } from "@/server/seo";
 type Params = Promise<{ slug: string }>;
 
 async function load(params: Params) {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const { slug } = await params;
   const page = await getPage(decodeURIComponent(slug));
   if (!page) notFound();
@@ -32,6 +35,8 @@ export default function ContentPage({ params }: { params: Params }) {
 }
 
 async function PageContent({ params }: { params: Params }) {
+  // داده‌ها فقط هنگام درخواست خوانده می‌شوند (build به پایگاه داده نیاز ندارد)
+  await connection();
   const page = await load(params);
   return (
     <>
