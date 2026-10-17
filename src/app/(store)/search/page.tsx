@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { after } from "next/server";
+import { after, connection } from "next/server";
 import { Breadcrumbs } from "@/components/store/breadcrumbs";
 import { CatalogSkeleton, CatalogView } from "@/components/store/catalog-view";
 import { parseCatalogParams } from "@/lib/validation/catalog";
@@ -26,6 +26,8 @@ export default function SearchPage({ searchParams }: { searchParams: SearchParam
 }
 
 async function SearchResults({ searchParams }: { searchParams: SearchParams }) {
+  // نتایج و ثبت جست‌وجو فقط هنگام درخواست
+  await connection();
   const filters = parseCatalogParams(await searchParams);
   const [page, facets] = await Promise.all([getCatalogPage(filters), getFacets(filters)]);
   // ثبت ناشناس عبارت جست‌وجو برای تحلیل (پس از ارسال پاسخ)
