@@ -1,0 +1,112 @@
+# ═══════════════════════════════════════════════════════════════
+# اجرای کامل روشاک با Docker — مناسب توسعه و staging
+#   docker compose --env-file .env.docker up -d --build
+#   (بدون --env-file، Compose مقادیر را از .env توسعه می‌خواند — آن را عمداً استفاده نکنید)
+#   سایت: http://localhost:3000 | صندوق ایمیل آزمایشی (Mailpit): http://localhost:8025
+#
+# متغیرهای لازم (در فایل .env.docker کنار همین فایل؛ نمونه: docs/deployment.md):
+#   TOKEN_HASH_SECRET, POSTGRES_PASSWORD, CRON_SECRET
+# برای محیط عملیاتی: SMTP واقعی به‌جای Mailpit، APP_URL با https و رمزهای قوی. docs/deployment.md
+# ═══════════════════════════════════════════════════════════════
+name: roshak
+
+x-app-env: &app-env
+  NODE_ENV: production
+  APP_URL: ${APP_URL:-http://localhost:3000}
+  DATABASE_URL: postgresql://roshak:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD را تنظیم کنید}@postgres:5432/roshak
+  TOKEN_HASH_SECRET: ${TOKEN_HASH_SECRET:?TOKEN_HASH_SECRET را تنظیم کنید (حداقل ۳۲ کاراکتر)}
+  CRON_SECRET: ${CRON_SECRET:-}
+  TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+  REDIS_URL: redis://redis:6379
+  EMAIL_PROVIDER: smtp
+  EMAIL_FROM: ${EMAIL_FROM:-روشاک <no-reply@example.com>}
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  SMTP_SECURE: ${SMTP_SECURE:-false}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  STORAGE_DRIVER: local
+  LOCAL_STORAGE_DIR: /app/storage
+  # درگاه آزمایشی در حالت production فقط با اجازهٔ صریح فعال می‌شود؛ برای staging می‌توانید هر دو را true کنید
+  PAYMENT_TEST_MODE: ${PAYMENT_TEST_MODE:-false}
+  ALLOW_TEST_PAYMENTS_IN_PRODUCTION: ${ALLOW_TEST_PAYMENTS_IN_PRODUCTION:-false}
+  ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID:-}
+  ZARINPAL_SANDBOX: ${ZARINPAL_SANDBOX:-true}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: roshak
+      POSTGRES_USER: roshak
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD را تنظیم کنید}
+    volumes:
+      # در PostgreSQL 18 مسیر داده زیر /var/lib/postgresql/18 است
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roshak -d roshak"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+
+  # اعمال مهاجرت‌ها پیش از شروع برنامه (یک‌بار اجرا می‌شود و خارج می‌شود)
+  migrate:
+    build:
+      context: .
+      target: tools
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment: *app-env
+    volumes:
+      - media:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  # کارهای دوره‌ای: لغو سفارش‌های منقضی و آزادسازی موجودی، ارسال صف ایمیل، پاک‌سازی نشست‌ها
+  jobs:
+    build:
+      context: .
+      target: tools
+    restart: unless-stopped
+    command: ["npm", "run", "jobs:run", "--", "--loop"]
+    environment:
+      <<: *app-env
+      JOBS_INTERVAL_SECONDS: ${JOBS_INTERVAL_SECONDS:-300}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:
+  media:

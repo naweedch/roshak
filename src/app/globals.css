@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+/*
+ * سامانهٔ طراحی روشنک
+ * پالت اصلی: زرشکی، عاجی، شامپاینی، زغالی — رنگ‌های تأکیدی برای مجموعه‌ها و بخش‌های ویژه.
+ * همهٔ رنگ‌ها به‌صورت توکن تعریف شده‌اند و مستقیماً در کامپوننت‌ها کدنویسی نمی‌شوند.
+ */
+@theme {
+  /* پالت برند */
+  --color-burgundy: #641e32;
+  --color-burgundy-deep: #4a1424;
+  --color-burgundy-soft: #8a3a4f;
+  --color-ruby: #a51d3a;
+  --color-champagne: #d6b56d;
+  --color-champagne-soft: #ead7a8;
+  --color-champagne-deep: #9c7a3c;
+  --color-ivory: #fff8ef;
+  --color-ivory-deep: #f5ebdd;
+  --color-sand: #eadcc9;
+  --color-midnight: #17243a;
+  --color-midnight-deep: #0e1626;
+  --color-emerald: #176b57;
+  --color-rose: #e9a0b0;
+  --color-lavender: #b7a1d9;
+  --color-terracotta: #c76e51;
+  --color-charcoal: #242124;
+
+  /* نقش‌های معنایی */
+  --color-surface: var(--color-ivory);
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: var(--color-ivory-deep);
+  --color-ink: var(--color-charcoal);
+  --color-ink-muted: #6b5c60;
+  --color-ink-soft: #8d7d80;
+  --color-line: #e6d8c6;
+  --color-line-strong: #cdb9a2;
+  --color-primary: var(--color-burgundy);
+  --color-primary-ink: var(--color-ivory);
+  --color-danger: #a3243b;
+  --color-danger-soft: #fbe9ec;
+  --color-success: #1d6b4f;
+  --color-success-soft: #e5f2ec;
+  --color-warning: #8a5a12;
+  --color-warning-soft: #fbf1dc;
+
+  /* حروف‌نگاری */
+  --font-sans: "Vazirmatn Variable", "Vazirmatn", Tahoma, system-ui, sans-serif;
+  --font-display: "Markazi Text Variable", "Markazi Text", "Vazirmatn Variable", serif;
+  --font-latin: "Playfair Display Variable", "Playfair Display", Georgia, serif;
+
+  /* مقیاس حروف (نسبت ۱٫۲۵ با نقطه‌های ثابت) */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.6;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.7;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.8;
+  --text-base: 1rem;
+  --text-base--line-height: 1.9;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.85;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.6;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.45;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 1.35;
+  --text-4xl: 3rem;
+  --text-4xl--line-height: 1.25;
+  --text-5xl: 4rem;
+  --text-5xl--line-height: 1.15;
+  --text-6xl: 5.25rem;
+  --text-6xl--line-height: 1.08;
+
+  --radius-field: 0.875rem;
+  --radius-panel: 1.5rem;
+
+  --shadow-float: 0 24px 60px -24px rgb(74 20 36 / 0.35);
+  --shadow-soft: 0 10px 30px -18px rgb(36 33 36 / 0.35);
+
+  --ease-silk: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drape: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-shimmer: shimmer 1.8s var(--ease-drape) infinite;
+  --animate-fade-in: fade-in 0.5s var(--ease-silk) both;
+
+}
+
+/* کلیدفریم‌ها بیرون از @theme تعریف می‌شوند تا در کلاس‌های دلخواه هم در دسترس باشند */
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 18px)) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes sheet-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes sheet-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes sheet-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* بخش آغازین: جابه‌جایی بسیار آرام لایهٔ مدل و برق ریز روی لباس */
+@keyframes hero-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-0.6%, -0.8%, 0); }
+}
+@keyframes glint {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  8% { opacity: 1; transform: scale(1); }
+  16% { opacity: 0; transform: scale(0.5); }
+}
+
+/* محو نرم بالا و پایین عکس برش‌خوردهٔ مدل تا لبهٔ برش مو و دامن در تاریکی صحنه حل شود */
+.hero-model {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 11%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 11%, #000 80%, transparent 100%);
+}
+/* نوارهای ساتن در لبه‌های ستون تصویر (به‌ویژه سمت متن) محو می‌شوند تا برش عمودی دیده نشود */
+.hero-silk {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 78%, transparent 100%);
+}
+
+@layer base {
+  :root {
+    --focus-ring: var(--color-burgundy);
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.9;
+    font-feature-settings: "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: inherit;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* اعداد جدولی برای قیمت و ستون‌ها */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background-color: var(--color-champagne-soft);
+    color: var(--color-burgundy-deep);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  /* بخش‌های تیره فوکوس روشن دارند */
+  .on-dark {
+    --focus-ring: var(--color-champagne);
+  }
+
+  [dir="rtl"] .flip-rtl {
+    transform: scaleX(-1);
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  /* قاب طاق‌نما: سر نیم‌دایره برای تصاویر عمودی */
+  .arch-3-4 { border-radius: 50% 50% 0 0 / 37.5% 37.5% 0 0; }
+  .arch-4-5 { border-radius: 50% 50% 0 0 / 40% 40% 0 0; }
+  .arch-2-3 { border-radius: 50% 50% 0 0 / 33.333% 33.333% 0 0; }
+  .arch-soft { border-radius: 999px 999px 1.25rem 1.25rem / 999px 999px 1.25rem 1.25rem; }
+
+  .skeleton {
+    background-color: var(--color-ivory-deep);
+    background-image: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.65) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  /* متن غنی مقاله‌ها و صفحات محتوایی */
+  .prose-roshnak {
+    max-width: 68ch;
+    font-size: 1.0625rem;
+    line-height: 2.05;
+    color: var(--color-ink);
+  }
+  .prose-roshnak > * + * { margin-top: 1.1em; }
+  .prose-roshnak h2 {
+    font-size: var(--text-2xl);
+    line-height: 1.4;
+    color: var(--color-burgundy);
+    margin-top: 2em;
+  }
+  .prose-roshnak h3 {
+    font-size: var(--text-xl);
+    color: var(--color-burgundy);
+    margin-top: 1.6em;
+  }
+  .prose-roshnak ul { list-style: disc; padding-inline-start: 1.5em; }
+  .prose-roshnak ol { list-style: decimal; padding-inline-start: 1.5em; }
+  .prose-roshnak li + li { margin-top: 0.4em; }
+  .prose-roshnak a { color: var(--color-burgundy); text-decoration: underline; text-underline-offset: 4px; }
+  .prose-roshnak blockquote {
+    border-inline-start: 2px solid var(--color-champagne);
+    padding-inline-start: 1.25em;
+    color: var(--color-ink-muted);
+    font-size: 0.95em;
+  }
+  .prose-roshnak strong { color: var(--color-burgundy-deep); font-weight: 650; }
+}
+
+@layer utilities {
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .text-balance { text-wrap: balance; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

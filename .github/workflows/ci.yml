@@ -1,0 +1,121 @@
+# یکپارچه‌سازی پیوسته: بررسی نوع‌ها، lint، تست واحد و یکپارچه، ساخت، و تست سرتاسری
+# همهٔ رازها در هر اجرا به‌صورت تصادفی ساخته می‌شوند؛ هیچ کلید واقعی در CI لازم نیست.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  # فقط برای prisma generate هنگام نصب؛ به هیچ پایگاه داده‌ای وصل نمی‌شود
+  DATABASE_URL: postgresql://build:build@localhost:5432/build
+
+jobs:
+  check:
+    name: بررسی، تست و ساخت
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: roshak
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: roshak_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U roshak -d roshak_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: بررسی نوع‌ها
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: تست واحد
+        run: npm run test:unit
+      - name: تست یکپارچه
+        run: npm run test:integration
+        env:
+          TEST_DATABASE_URL: postgresql://roshak:ci_password@localhost:5432/roshak_test
+      - name: ساخت
+        run: npm run build
+
+  e2e:
+    name: تست سرتاسری
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: roshak
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: roshak
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U roshak -d roshak"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      NODE_ENV: production
+      APP_URL: http://localhost:3100
+      E2E_BASE_URL: http://localhost:3100
+      DATABASE_URL: postgresql://roshak:ci_password@localhost:5432/roshak
+      LOCAL_STORAGE_DIR: ${{ github.workspace }}/storage
+      EMAIL_PROVIDER: log
+      # درگاه آزمایشی فقط در همین محیط CI؛ در محیط عملیاتی واقعی هرگز
+      PAYMENT_TEST_MODE: "true"
+      ALLOW_TEST_PAYMENTS_IN_PRODUCTION: "true"
+      SEED_ALLOW_PRODUCTION: "true"
+      SEED_ADMIN_EMAIL: admin@ci.roshak.local
+      E2E_STAFF_EMAIL: orders@ci.roshak.local
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: ساخت رازهای تصادفی این اجرا
+        run: |
+          for name in TOKEN_HASH_SECRET SEED_ADMIN_PASSWORD E2E_STAFF_PASSWORD PAYMENT_TEST_WEBHOOK_SECRET; do
+            value="Ci-$(openssl rand -hex 24)"
+            echo "::add-mask::$value"
+            echo "$name=$value" >> "$GITHUB_ENV"
+          done
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: پایگاه داده و دادهٔ نمونه
+        run: |
+          npx prisma migrate deploy
+          npm run db:seed
+          ADMIN_PASSWORD="$E2E_STAFF_PASSWORD" npm run admin:create -- --email "$E2E_STAFF_EMAIL" --role ORDER_MANAGER
+      - name: ساخت و اجرای سرور
+        run: |
+          npm run build
+          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/.next/static
+          (cd .next/standalone && PORT=3100 HOSTNAME=127.0.0.1 node server.js > ../../server.log 2>&1 &)
+          for i in $(seq 1 60); do curl -fsS http://localhost:3100/api/health && break; sleep 2; done
+      - name: Playwright
+        run: npm run test:e2e -- --project=desktop
+      - name: گزارش خطا
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: |
+            test-results/
+            server.log
+          retention-days: 7

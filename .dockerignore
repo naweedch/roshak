@@ -1,0 +1,30 @@
+# وابستگی‌ها و خروجی‌های ساخت (داخل ایمیج دوباره ساخته می‌شوند)
+node_modules
+.next
+out
+build
+src/generated
+*.tsbuildinfo
+
+# داده‌ها و فایل‌های محلی
+storage
+.data
+.playwright-mcp
+test-results
+playwright-report
+coverage
+
+# رازها — هرگز داخل ایمیج کپی نشوند
+.env
+.env.*
+!.env.example
+
+# ابزارها
+.git
+.github
+.claude
+.vscode
+.idea
+npm-debug.log*
+Dockerfile
+docker-compose*.yml
