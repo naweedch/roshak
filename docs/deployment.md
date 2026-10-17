@@ -47,6 +47,8 @@ cp .env.example .env.docker   # و مقادیر محیط عملیاتی را ت�
 docker compose --env-file .env.docker up -d --build
 ```
 
+`APP_URL` هم هنگام ساخت ایمیج (به‌عنوان build arg، برای نشانی canonical و نقشهٔ سایتِ صفحات ایستا) و هم هنگام اجرا خوانده می‌شود؛ پس از تغییر آن ایمیج را دوباره بسازید (`--build`). در ساخت دستی: `docker build --build-arg APP_URL=https://example.com --target runner .`
+
 حداقل متغیرهای لازم در `.env.docker`:
 
 ```dotenv

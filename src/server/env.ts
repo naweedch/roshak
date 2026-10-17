@@ -72,9 +72,15 @@ export function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
-/** آدرس پایهٔ سایت بدون اسلش انتهایی */
+/**
+ * آدرس پایهٔ سایت بدون اسلش انتهایی.
+ * فقط APP_URL را اعتبارسنجی می‌کند (نه کل متغیرها) تا پیش‌رندر صفحات ایستا در زمان build
+ * به رازهای سرور مثل TOKEN_HASH_SECRET نیاز نداشته باشد.
+ */
 export function appUrl(): string {
-  return env().APP_URL.replace(/\/+$/, "");
+  const parsed = schema.shape.APP_URL.safeParse(process.env.APP_URL);
+  if (!parsed.success) throw new Error("پیکربندی متغیرهای محیطی نامعتبر است:\nAPP_URL: نشانی معتبر نیست");
+  return parsed.data.replace(/\/+$/, "");
 }
 
 /** درگاه آزمایشی فقط در توسعه یا با اجازهٔ صریح در محیط عملیاتی فعال است */

@@ -19,6 +19,9 @@ RUN npm ci --no-audit --no-fund
 
 # ─── ساخت ───
 FROM deps AS builder
+# نشانی سایت هنگام build در صفحات ایستا (canonical و نقشهٔ سایت) ثبت می‌شود؛ با --build-arg مقدار واقعی را بدهید
+ARG APP_URL=http://localhost:3000
+ENV APP_URL=${APP_URL}
 COPY . .
 RUN npm run build
 
