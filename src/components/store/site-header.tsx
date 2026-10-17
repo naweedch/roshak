@@ -88,8 +88,9 @@ export function SiteHeader({ collections }: { collections: NavCollection[] }) {
     >
       <div className="mx-auto grid h-[76px] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-8">
         {/* لوگو (سمت راست در RTL) */}
-        <Link href="/" className={cn("justify-self-start transition-colors", overHero ? "text-ivory" : "text-burgundy")} aria-label="روشاک، صفحهٔ اصلی">
+        <Link href="/" className={cn("justify-self-start transition-colors", overHero ? "text-ivory" : "text-burgundy")}>
           <RoshakLogo className="[&_svg]:h-8 sm:[&_svg]:h-9" />
+          <span className="sr-only">، صفحهٔ اصلی</span>
         </Link>
 
         {/* ناوبری اصلی (وسط) */}
@@ -193,8 +194,9 @@ export function SiteHeaderShell() {
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-ivory/90 text-burgundy backdrop-blur-md">
       <div className="mx-auto grid h-[76px] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-8">
-        <Link href="/" className="justify-self-start" aria-label="روشاک، صفحهٔ اصلی">
+        <Link href="/" className="justify-self-start">
           <RoshakLogo className="[&_svg]:h-8 sm:[&_svg]:h-9" />
+          <span className="sr-only">، صفحهٔ اصلی</span>
         </Link>
         <span />
         <span />

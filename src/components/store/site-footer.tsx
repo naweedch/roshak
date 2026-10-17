@@ -42,8 +42,9 @@ export function SiteFooter({ settings, collections }: { settings: StoreSettingsD
       <div className="relative mx-auto max-w-[1440px] px-4 pb-10 pt-20 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr]">
           <div>
-            <Link href="/" className="inline-block text-ivory" aria-label="روشاک، صفحهٔ اصلی">
+            <Link href="/" className="inline-block text-ivory">
               <RoshakLogo />
+              <span className="sr-only">، صفحهٔ اصلی</span>
             </Link>
             {settings.tagline ? <p className="mt-5 max-w-sm text-ivory/70">{settings.tagline}</p> : null}
             <div className="mt-8">

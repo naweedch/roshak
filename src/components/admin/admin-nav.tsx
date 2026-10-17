@@ -100,8 +100,9 @@ export function AdminNav({ role, email }: { role: Role; email: string }) {
   return (
     <>
       <div className="on-dark sticky top-0 z-30 flex h-16 items-center justify-between bg-midnight-deep px-4 text-ivory lg:hidden">
-        <Link href="/admin" className="text-ivory" aria-label="پیشخوان مدیریت">
+        <Link href="/admin" className="text-ivory">
           <RoshakLogo className="[&_svg]:h-6" />
+          <span className="sr-only">، پیشخوان مدیریت</span>
         </Link>
         <Dialog open={open} onOpenChange={setOpen}>
           <button type="button" onClick={() => setOpen(true)} className="grid size-11 place-items-center rounded-full text-ivory hover:bg-ivory/10" aria-label="باز کردن منوی مدیریت" aria-expanded={open}>
@@ -116,8 +117,9 @@ export function AdminNav({ role, email }: { role: Role; email: string }) {
       </div>
       <div className="on-dark hidden h-full flex-col bg-midnight-deep text-ivory lg:flex">
         <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/admin" className="text-ivory" aria-label="پیشخوان مدیریت">
+          <Link href="/admin" className="text-ivory">
             <RoshakLogo className="[&_svg]:h-7" />
+            <span className="sr-only">، پیشخوان مدیریت</span>
           </Link>
           <span className="rounded-full bg-champagne/15 px-2 py-0.5 text-[0.65rem] text-champagne">مدیریت</span>
         </div>
