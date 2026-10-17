@@ -94,7 +94,8 @@ jobs:
             echo "::add-mask::$value"
             echo "$name=$value" >> "$GITHUB_ENV"
           done
-      - run: npm ci
+      # NODE_ENV=production در این job باعث می‌شود npm ci وابستگی‌های توسعه (dotenv، tsx، Playwright) را نصب نکند
+      - run: npm ci --include=dev
       - run: npx playwright install --with-deps chromium
       - name: پایگاه داده و دادهٔ نمونه
         run: |
