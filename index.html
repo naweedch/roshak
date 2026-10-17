@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>روشاک | فروشگاه اینترنتی لباس مجلسی</title>
+  <meta name="description" content="نمونه‌کار: فروشگاه اینترنتی کامل لباس مجلسی و شب زنانه با Next.js و PostgreSQL؛ ویترین، سبد خرید، پرداخت، پنل مدیریت و انبار.">
+  <meta property="og:title" content="روشاک | فروشگاه اینترنتی لباس مجلسی">
+  <meta property="og:description" content="فروشگاه اینترنتی کامل لباس مجلسی و شب زنانه؛ از ویترین تا پنل مدیریت.">
+  <meta property="og:image" content="img/desktop-hero.webp">
+  <meta property="og:locale" content="fa_IR">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/vazirmatn-arabic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/markazi-text-arabic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    /* فونت‌ها روی همین صفحه میزبانی می‌شوند تا بدون وابستگی به سرویس خارجی بارگذاری شوند */
+    @font-face { font-family: "Vazirmatn"; src: url("fonts/vazirmatn-arabic-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+    @font-face { font-family: "Vazirmatn"; src: url("fonts/vazirmatn-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+    @font-face { font-family: "Markazi Text"; src: url("fonts/markazi-text-arabic-wght-normal.woff2") format("woff2"); font-weight: 400 700; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+    @font-face { font-family: "Markazi Text"; src: url("fonts/markazi-text-latin-wght-normal.woff2") format("woff2"); font-weight: 400 700; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+    :root {
+      --night: #12050a;
+      --wine: #3a0613;
+      --burgundy: #641e32;
+      --ruby: #a51d3a;
+      --champagne: #d6b56d;
+      --champagne-soft: #ead7a8;
+      --ivory: #fbf6ee;
+      --ivory-deep: #f3eadb;
+      --ink: #241318;
+      --ink-muted: #6b5a5e;
+      --line: rgba(100, 30, 50, 0.14);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    body {
+      margin: 0;
+      background: var(--ivory);
+      color: var(--ink);
+      font-family: "Vazirmatn", Tahoma, sans-serif;
+      font-size: 16px;
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { display: block; max-width: 100%; height: auto; }
+    a { color: inherit; }
+    .wrap { width: min(1200px, 100% - 32px); margin-inline: auto; }
+    .display { font-family: "Markazi Text", "Vazirmatn", serif; font-weight: 600; line-height: 1.1; }
+    :focus-visible { outline: 2px solid var(--champagne); outline-offset: 3px; border-radius: 6px; }
+
+    /* ─── بخش آغازین ─── */
+    .hero {
+      background: radial-gradient(70% 90% at 25% 40%, #6e0d22 0%, var(--wine) 40%, var(--night) 78%);
+      color: var(--ivory);
+      padding: 56px 0 0;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(214, 181, 109, 0.25);
+    }
+    .hero-grid { display: grid; gap: 40px; align-items: center; }
+    .eyebrow { display: flex; align-items: center; gap: 12px; color: var(--champagne); font-size: 15px; margin: 0 0 14px; }
+    .eyebrow::before { content: ""; width: 36px; height: 1px; background: linear-gradient(to left, var(--champagne), transparent); }
+    .hero h1 { font-size: clamp(64px, 11vw, 132px); margin: 0; letter-spacing: 0; }
+    .hero .lead { font-size: 18px; color: rgba(251, 246, 238, 0.78); max-width: 34em; margin: 18px 0 30px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn { display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 26px; border-radius: 999px; font-weight: 600; text-decoration: none; font-size: 15px; transition: filter .25s, background-color .25s, border-color .25s; }
+    .btn-gold { background: linear-gradient(to bottom, #e6c987, var(--champagne)); color: #2a0a12; box-shadow: 0 14px 34px -16px rgba(214, 181, 109, .9); }
+    .btn-gold:hover { filter: brightness(1.05); }
+    .btn-line { border: 1px solid rgba(214, 181, 109, .5); color: var(--ivory); }
+    .btn-line:hover { border-color: var(--champagne); background: rgba(214, 181, 109, .1); }
+    .btn svg { width: 18px; height: 18px; }
+
+    .stage { position: relative; padding-bottom: 28px; }
+    .browser { border-radius: 14px 14px 0 0; overflow: hidden; border: 1px solid rgba(214, 181, 109, .35); border-bottom: 0; box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .8); background: var(--night); }
+    .browser-bar { display: flex; gap: 6px; align-items: center; padding: 10px 14px; background: #1c0910; border-bottom: 1px solid rgba(214, 181, 109, .18); direction: ltr; }
+    .browser-bar span { width: 9px; height: 9px; border-radius: 50%; background: rgba(251, 246, 238, .22); }
+    .browser-bar em { margin-inline-start: 10px; font-style: normal; font-size: 12px; color: rgba(251, 246, 238, .5); font-family: ui-monospace, monospace; }
+    .phone { position: absolute; left: -8px; bottom: 0; width: 26%; min-width: 120px; border-radius: 26px; border: 6px solid #1c0910; box-shadow: 0 24px 60px -18px rgba(0, 0, 0, .85), 0 0 0 1px rgba(214, 181, 109, .35); overflow: hidden; background: var(--night); }
+
+    /* ─── بخش‌های محتوا ─── */
+    section { padding: 88px 0; }
+    .section-title { font-size: clamp(38px, 5vw, 56px); margin: 0 0 10px; color: var(--burgundy); }
+    .section-lead { color: var(--ink-muted); max-width: 40em; margin: 0 0 40px; }
+    .features { display: grid; gap: 20px; }
+    .feature { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; }
+    .feature h3 { font-family: "Markazi Text", serif; font-size: 30px; margin: 0 0 12px; color: var(--ink); font-weight: 600; }
+    .feature ul { margin: 0; padding: 0 18px 0 0; color: #3d2a2f; }
+    .feature li { margin-bottom: 6px; }
+    .feature li::marker { color: var(--ruby); }
+
+    .gallery { display: grid; gap: 28px; }
+    figure { margin: 0; }
+    .shot { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--ivory-deep); box-shadow: 0 18px 40px -28px rgba(36, 19, 24, .45); }
+    .shot a { display: block; }
+    figcaption { margin-top: 10px; font-size: 15px; color: var(--ink-muted); }
+    figcaption strong { color: var(--ink); font-weight: 600; }
+    .phones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 980px; margin-inline: auto; }
+    @media (min-width: 720px) { .phones { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .phones .shot { border-radius: 22px; border: 5px solid #1c0910; }
+    .sub-title { font-family: "Markazi Text", serif; font-size: 34px; font-weight: 600; margin: 64px 0 22px; color: var(--burgundy); }
+
+    .dark { background: var(--night); color: var(--ivory); }
+    .dark .section-title { color: var(--champagne-soft); }
+    .dark .section-lead { color: rgba(251, 246, 238, .7); }
+    .dark .shot { border-color: rgba(214, 181, 109, .25); }
+    .dark figcaption { color: rgba(251, 246, 238, .65); }
+    .dark figcaption strong { color: var(--ivory); }
+
+    .stack { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; margin: 0; list-style: none; direction: ltr; justify-content: flex-end; }
+    .stack li { border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px; background: #fff; font-size: 14px; font-family: "Vazirmatn", sans-serif; }
+
+    footer { padding: 48px 0 64px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 15px; }
+    footer a { color: var(--burgundy); }
+    .note { font-size: 14px; }
+
+    @media (min-width: 900px) {
+      .hero { padding-top: 72px; }
+      .hero-grid { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 56px; }
+      .hero-text { padding-bottom: 72px; }
+      .features { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .gallery .wide { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-text">
+        <p class="eyebrow">نمونه‌کار: فروشگاه اینترنتی کامل</p>
+        <h1 class="display">روشاک</h1>
+        <p class="lead">فروشگاه اینترنتی لباس مجلسی و شب زنانه؛ از ویترین و سبد خرید تا پرداخت، پنل مدیریت و انبار. تمام بخش‌ها فارسی و راست‌به‌چپ هستند و با Next.js و PostgreSQL ساخته شده‌اند.</p>
+        <div class="actions">
+          <a class="btn btn-gold" href="https://github.com/naweedch/roshak">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg>
+            کد کامل در گیت‌هاب
+          </a>
+          <a class="btn btn-line" href="#gallery">تصاویر سایت</a>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="browser">
+          <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><em>roshak — صفحهٔ اصلی</em></div>
+          <img src="img/desktop-hero.webp" width="1440" height="900" alt="صفحهٔ اصلی روشاک: مدل با لباس شب زرشکی در سمت چپ، نوارهای ساتن متحرک و تیتر «درخشش به سبک شما» در سمت راست" fetchpriority="high">
+        </div>
+        <div class="phone"><img src="img/mobile-hero.webp" width="640" height="1385" alt="نمای موبایل صفحهٔ اصلی روشاک"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section aria-labelledby="features-title">
+      <div class="wrap">
+        <h2 id="features-title" class="display section-title">آنچه ساخته شده</h2>
+        <p class="section-lead">یک فروشگاه واقعی و کامل، نه فقط ظاهر: قیمت، موجودی، تخفیف و پرداخت همگی در سرور کنترل می‌شوند و همهٔ بخش‌ها از پنل مدیریت قابل ویرایش‌اند.</p>
+        <div class="features">
+          <article class="feature">
+            <h3>ویترین فروشگاه</h3>
+            <ul>
+              <li>صفحهٔ اصلی سینمایی با نوارهای ساتن متحرک و اسلایدهای قابل ویرایش</li>
+              <li>فهرست محصولات با فیلتر رنگ، سایز، قیمت و مرتب‌سازی</li>
+              <li>جست‌وجوی فارسی با پیشنهاد هم‌زمان</li>
+              <li>صفحهٔ محصول با گالری، نمای چندزاویه و راهنمای سایز</li>
+              <li>سبد خرید، کد تخفیف و تسویه‌حساب</li>
+              <li>حساب کاربری، علاقه‌مندی‌ها و پیگیری سفارش</li>
+            </ul>
+          </article>
+          <article class="feature">
+            <h3>پنل مدیریت</h3>
+            <ul>
+              <li>پیشخوان فروش و سفارش‌های اخیر</li>
+              <li>محصولات، تنوع رنگ و سایز و بارگذاری تصویر</li>
+              <li>انبار با تاریخچهٔ کامل حرکات موجودی</li>
+              <li>سفارش‌ها، تغییر وضعیت، بازپرداخت و خروجی CSV</li>
+              <li>مشتریان، تخفیف‌ها، نظرات، محتوا و مجله</li>
+              <li>پنج نقش کارکنان با مجوزهای جدا و گزارش ممیزی</li>
+            </ul>
+          </article>
+          <article class="feature">
+            <h3>امنیت و زیرساخت</h3>
+            <ul>
+              <li>محاسبهٔ قیمت، تخفیف و موجودی فقط در سرور و در یک تراکنش</li>
+              <li>تأیید پرداخت در سرور؛ درگاه آزمایشی و آداپتور زرین‌پال</li>
+              <li>رمزگذاری Argon2id، نشست امن، محافظت CSRF و محدودیت نرخ</li>
+              <li>سئو: داده‌های ساختاریافته، نقشهٔ سایت و متادیتای قابل ویرایش</li>
+              <li>تست واحد، یکپارچگی و مرورگر</li>
+              <li>آمادهٔ استقرار با Docker</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery" class="dark" aria-labelledby="gallery-title">
+      <div class="wrap">
+        <h2 id="gallery-title" class="display section-title">تصاویر سایت</h2>
+        <p class="section-lead">همهٔ تصاویر از نسخهٔ در حال اجرای پروژه گرفته شده‌اند. برای دیدن اندازهٔ کامل روی هر تصویر بزنید.</p>
+        <div class="gallery">
+          <figure class="wide">
+            <div class="shot"><a href="img/desktop-hero-2.webp"><img src="img/desktop-hero-2.webp" width="1440" height="900" loading="lazy" alt="اسلاید دوم بخش آغازین با لباس دکلتهٔ افسون"></a></div>
+            <figcaption><strong>اسلاید دوم بخش آغازین.</strong> هر اسلاید یک بنر از پنل مدیریت است و می‌تواند ویدئو هم داشته باشد.</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/desktop-new.webp"><img src="img/desktop-new.webp" width="1440" height="900" loading="lazy" alt="ردیف تازه‌های روشاک در صفحهٔ اصلی"></a></div>
+            <figcaption><strong>تازه‌ها</strong> در صفحهٔ اصلی</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/desktop-collections.webp"><img src="img/desktop-collections.webp" width="1440" height="900" loading="lazy" alt="بخش مجموعه‌های فصل"></a></div>
+            <figcaption><strong>مجموعه‌های فصل</strong> با قاب طاق ایرانی</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/desktop-shop.webp"><img src="img/desktop-shop.webp" width="1440" height="900" loading="lazy" alt="صفحهٔ همهٔ لباس‌ها با فیلترها"></a></div>
+            <figcaption><strong>فروشگاه</strong> با فیلتر رنگ، سایز و دسته</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/desktop-product.webp"><img src="img/desktop-product.webp" width="1440" height="900" loading="lazy" alt="صفحهٔ محصول لباس شب افسون"></a></div>
+            <figcaption><strong>صفحهٔ محصول</strong> با انتخاب رنگ و سایز و گالری</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/desktop-checkout.webp"><img src="img/desktop-checkout.webp" width="1440" height="900" loading="lazy" alt="صفحهٔ تکمیل خرید و خلاصهٔ سفارش"></a></div>
+            <figcaption><strong>تسویه‌حساب</strong> با محاسبهٔ مبلغ در سرور</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/desktop-campaign.webp"><img src="img/desktop-campaign.webp" width="1440" height="900" loading="lazy" alt="بخش کمپین شب‌های یلدا"></a></div>
+            <figcaption><strong>کمپین فصل</strong> با حرکت پارالاکس</figcaption>
+          </figure>
+        </div>
+
+        <h3 class="sub-title">پنل مدیریت</h3>
+        <div class="gallery">
+          <figure>
+            <div class="shot"><a href="img/admin-dashboard.webp"><img src="img/admin-dashboard.webp" width="1440" height="900" loading="lazy" alt="پیشخوان پنل مدیریت با آمار فروش"></a></div>
+            <figcaption><strong>پیشخوان</strong> و نمودار فروش</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/admin-products.webp"><img src="img/admin-products.webp" width="1440" height="900" loading="lazy" alt="فهرست محصولات در پنل مدیریت"></a></div>
+            <figcaption><strong>محصولات</strong> و وضعیت انتشار</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/admin-orders.webp"><img src="img/admin-orders.webp" width="1440" height="900" loading="lazy" alt="فهرست سفارش‌ها با فیلتر و خروجی CSV"></a></div>
+            <figcaption><strong>سفارش‌ها</strong> با فیلتر و خروجی CSV</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><a href="img/admin-inventory.webp"><img src="img/admin-inventory.webp" width="1440" height="900" loading="lazy" alt="موجودی انبار و اصلاح موجودی"></a></div>
+            <figcaption><strong>انبار</strong> و اصلاح موجودی</figcaption>
+          </figure>
+        </div>
+
+        <h3 class="sub-title">موبایل</h3>
+        <div class="phones">
+          <figure>
+            <div class="shot"><img src="img/mobile-hero.webp" width="640" height="1385" loading="lazy" alt="صفحهٔ اصلی در موبایل"></div>
+            <figcaption>صفحهٔ اصلی</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><img src="img/mobile-shop.webp" width="640" height="1385" loading="lazy" alt="فروشگاه در موبایل"></div>
+            <figcaption>فروشگاه</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><img src="img/mobile-product.webp" width="640" height="1385" loading="lazy" alt="گالری صفحهٔ محصول در موبایل"></div>
+            <figcaption>گالری محصول</figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><img src="img/mobile-product-info.webp" width="640" height="1385" loading="lazy" alt="انتخاب رنگ، سایز و افزودن به سبد در موبایل"></div>
+            <figcaption>انتخاب سایز و خرید</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="stack-title">
+      <div class="wrap">
+        <h2 id="stack-title" class="display section-title">فناوری‌ها</h2>
+        <p class="section-lead">کد با TypeScript نوشته شده و ساختار آن برای نگهداری بلندمدت جدا شده است: رابط کاربری، سرویس‌های سرور، API نسخه‌دار و پایگاه داده.</p>
+        <ul class="stack">
+          <li>Next.js 16</li>
+          <li>React 19</li>
+          <li>TypeScript</li>
+          <li>PostgreSQL</li>
+          <li>Prisma 7</li>
+          <li>Tailwind CSS 4</li>
+          <li>Motion</li>
+          <li>Vitest</li>
+          <li>Playwright</li>
+          <li>Docker</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>کد منبع: <a href="https://github.com/naweedch/roshak" dir="ltr">github.com/naweedch/roshak</a></p>
+      <p class="note">داده‌ها و قیمت‌های نمایش‌داده‌شده نمونه هستند. پرداخت در این نسخه با درگاه آزمایشی انجام می‌شود و هیچ پولی جابه‌جا نمی‌شود.</p>
+    </div>
+  </footer>
+</body>
+</html>
